@@ -1,7 +1,7 @@
 # src/llm_explainer.py
 # Takes ML analysis results → Generates human-readable explanation
 
-from openai import OpenAI
+from groq import Groq
 from dotenv import load_dotenv
 import os
 

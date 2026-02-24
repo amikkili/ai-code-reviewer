@@ -2,9 +2,9 @@
 # The main FastAPI server — connects everything together!
 
 from fastapi import FastAPI, Request
-from ml_analyzer  import MLCodeAnalyzer
-from github_client import GitHubClient
-from llm_explainer import LLMExplainer
+from src.ml_analyzer   import MLCodeAnalyzer
+from src.github_client import GitHubClient
+from src.llm_explainer import LLMExplainer
 from dotenv import load_dotenv
 import os
 

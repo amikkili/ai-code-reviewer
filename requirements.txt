@@ -10,3 +10,4 @@ requests
 radon
 pytest
 pyngrok
+groq
