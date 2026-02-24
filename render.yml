@@ -1,0 +1,15 @@
+# render.yaml
+services:
+  - type: web
+    name: ai-code-reviewer
+    env: docker
+    plan: free
+    branch: main
+    healthCheckPath: /
+    envVars:
+      - key: GITHUB_TOKEN
+        sync: false         # We'll add this manually on Render
+      - key: OPENAI_API_KEY
+        sync: false         # We'll add this manually on Render
+      - key: GITHUB_USERNAME
+        sync: false

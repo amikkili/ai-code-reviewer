@@ -8,3 +8,5 @@ numpy
 python-dotenv
 requests
 radon
+pytest
+pyngrok
