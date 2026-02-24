@@ -1,18 +1,27 @@
 # src/llm_explainer.py
-# Takes ML analysis results → Generates human-readable explanation
+# Updated to use Groq instead of OpenAI — faster and FREE!
 
 from groq import Groq
 from dotenv import load_dotenv
-from openai import OpenAI
 import os
 
 load_dotenv()
 
 class LLMExplainer:
-    """Uses LLM to explain ML analysis results in plain English"""
+    """Uses Groq LLM to explain ML analysis results in plain English"""
 
     def __init__(self):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # Lazy initialization — only connect when needed
+        self.client = None
+
+    def _get_client(self):
+        """Create client only when actually needed"""
+        if self.client is None:
+            api_key = os.getenv("GROQ_API_KEY")
+            if not api_key:
+                raise ValueError("GROQ_API_KEY environment variable not set!")
+            self.client = Groq(api_key=api_key)
+        return self.client
 
     def generate_review(self, analysis_results: list) -> str:
         """
@@ -37,7 +46,7 @@ class LLMExplainer:
                 all_issues_text += f"- WARNING: {issue.issue_type} on line {issue.line_number}: {issue.description}\n"
                 total_warnings  += 1
 
-        # Ask LLM to generate a friendly, professional review
+        # Ask Groq LLM to generate a friendly, professional review
         prompt = f"""
         You are a senior software engineer doing a code review.
         
@@ -54,22 +63,27 @@ class LLMExplainer:
         Format it nicely with emojis for readability.
         """
 
-        response = self.client.chat.completions.create(
-            model    = "gpt-4",
+        # Use Groq client
+        client   = self._get_client()
+        response = client.chat.completions.create(
+            model    = "llama3-8b-8192",    # Free Groq model!
             messages = [{"role": "user", "content": prompt}],
             temperature = 0.3
         )
 
         llm_explanation = response.choices[0].message.content
 
-        # Build the final formatted comment
+        # Calculate overall score
         overall_score = sum(r["quality_score"] for r in analysis_results) / len(analysis_results)
         score_emoji   = "" if overall_score >= 7 else "" if overall_score >= 5 else ""
 
+        # Build the final formatted comment
         final_comment = f"""
 ## AI Code Review Report
 
 {score_emoji} **Overall Quality Score: {overall_score:.1f} / 10**
+
+---
 
 ### Summary
 | Type | Count |
@@ -77,10 +91,14 @@ class LLMExplainer:
 | Critical Issues | {total_critical} |
 | Warnings | {total_warnings} |
 
-### AI Analysis
+---
+
+###  AI Analysis
 {llm_explanation}
 
-### Detailed Issues
+---
+
+###  Detailed Issues
 """
         # Add detailed issues per file
         for result in analysis_results:
@@ -88,7 +106,7 @@ class LLMExplainer:
                 final_comment += f"\n**`{result['filename']}`** — Score: {result['quality_score']}/10\n"
 
                 for issue in result["critical"]:
-                    final_comment += f"\n**{issue.issue_type}** (Line {issue.line_number})\n"
+                    final_comment += f"\n **{issue.issue_type}** (Line {issue.line_number})\n"
                     final_comment += f"- Problem: {issue.description}\n"
                     final_comment += f"- Fix: `{issue.suggestion}`\n"
 
@@ -97,5 +115,5 @@ class LLMExplainer:
                     final_comment += f"- Problem: {issue.description}\n"
                     final_comment += f"- Fix: `{issue.suggestion}`\n"
 
-        final_comment += "\n---\n*Automated review by AI Code Reviewer*"
+        final_comment += "\n---\n* Automated review by AI Code Reviewer using Groq LLaMA3*"
         return final_comment
