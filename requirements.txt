@@ -1,7 +1,6 @@
 fastapi
 uvicorn
 PyGithub
-openai
 scikit-learn
 pandas
 numpy
@@ -11,3 +10,5 @@ radon
 pytest
 pyngrok
 groq
+PyJWT
+cryptography
